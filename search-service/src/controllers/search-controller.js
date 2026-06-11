@@ -20,7 +20,7 @@ const searchPostController = async (req, res) => {
 
     res.json(results);
   } catch (e) {
-    logger.error("Error while searching post", error);
+    logger.error("Error while searching post", e);
     res.status(500).json({
       success: false,
       message: "Error while searching post",

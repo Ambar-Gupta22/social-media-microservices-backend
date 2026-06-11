@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 3007;
  */
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: process.env.NODE_ENV === "production" ? process.env.CLIENT_URL : "*",
   },
 });
 

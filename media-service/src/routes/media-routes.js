@@ -16,6 +16,13 @@ const upload = multer({
   limits: {
     fileSize: 5 * 1024 * 1024,
   },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/") || file.mimetype.startsWith("video/") || file.mimetype.startsWith("audio/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type. Only images, videos, and audio are allowed."), false);
+    }
+  },
 }).single("file");
 
 router.post(
@@ -28,14 +35,12 @@ router.post(
         return res.status(400).json({
           message: "Multer error while uploading:",
           error: err.message,
-          stack: err.stack,
         });
       } else if (err) {
         logger.error("Unknown error occured while uploading:", err);
         return res.status(500).json({
           message: "Unknown error occured while uploading:",
           error: err.message,
-          stack: err.stack,
         });
       }
 

@@ -20,10 +20,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
   },
   {
     timestamps: true,
@@ -38,6 +34,7 @@ userSchema.pre("save", async function (next) {
       return next(error);
     }
   }
+  next();
 });
 
 userSchema.methods.comparePassword = async function (candidatePassword) {

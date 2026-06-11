@@ -78,7 +78,7 @@ const loginUser = async (req, res) => {
       logger.warn("Invalid password");
       return res.status(400).json({
         success: false,
-        message: "Invalid password",
+        message: "Invalid credentials",
       });
     }
 
