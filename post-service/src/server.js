@@ -11,6 +11,7 @@ const { ipKeyGenerator } = rateLimit;
 const postRoutes = require("./routes/post-routes");
 const errorHandler = require("./middleware/errorHandler");
 const logger = require("./utils/logger");
+const { correlationMiddleware } = require("./utils/correlation");
 const { connectToRabbitMQ } = require("./utils/rabbitmq");
 
 const app = express();
@@ -29,6 +30,7 @@ const redisClient = new Redis(process.env.REDIS_URL);
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(correlationMiddleware);
 
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.url}`);
@@ -77,12 +79,13 @@ app.use((req, res, next) => {
 app.use("/api/posts", postRoutes);
 
 // Error handler
+app.get("/health", (req, res) => res.json({ status: "ok" }));
 app.use(errorHandler);
 
 async function startServer() {
   try {
     await connectToRabbitMQ();
-    app.listen(PORT, () => {
+    const serverInstance = app.listen(PORT, () => {
       logger.info(`Post service running on port ${PORT}`);
     });
   } catch (error) {
@@ -96,3 +99,19 @@ startServer();
 process.on("unhandledRejection", (reason) => {
   logger.error("Unhandled Rejection:", reason);
 });
+const gracefulShutdown = async () => {
+  logger.info("Initiating graceful shutdown...");
+  try {
+    if (serverInstance) {
+      serverInstance.close(() => logger.info("HTTP server closed."));
+    }
+    if (mongoose.connection.readyState === 1) await mongoose.connection.close();
+    logger.info("MongoDB connection closed.");
+    process.exit(0);
+  } catch (err) {
+    logger.error("Shutdown error", err);
+    process.exit(1);
+  }
+};
+process.on("SIGTERM", gracefulShutdown);
+process.on("SIGINT", gracefulShutdown);

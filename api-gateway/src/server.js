@@ -6,6 +6,7 @@ const helmet = require("helmet");
 const { rateLimit } = require("express-rate-limit");
 const { RedisStore } = require("rate-limit-redis");
 const logger = require("./utils/logger");
+const { correlationMiddleware } = require("./utils/correlation");
 const proxy = require("express-http-proxy");
 const errorHandler = require("./middleware/errorHandler");
 const { validateToken } = require("./middleware/authMiddleware");
@@ -18,6 +19,7 @@ const redisClient = new Redis(process.env.REDIS_URL);
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(correlationMiddleware);
 
 //rate limiting
 const ratelimitOptions = rateLimit({
@@ -60,6 +62,7 @@ app.use(
   proxy(process.env.IDENTITY_SERVICE_URL, {
     ...proxyOptions,
     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+      proxyReqOpts.headers["x-request-id"] = srcReq.headers["x-request-id"];
       proxyReqOpts.headers["Content-Type"] = "application/json";
       return proxyReqOpts;
     },
@@ -81,6 +84,7 @@ app.use(
     ...proxyOptions,
 
     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+      proxyReqOpts.headers["x-request-id"] = srcReq.headers["x-request-id"];
       proxyReqOpts.headers["Content-Type"] = "application/json";
       proxyReqOpts.headers["authorization"] = srcReq.headers["authorization"]; 
       proxyReqOpts.headers["x-user-id"] = srcReq.user.userId;
@@ -104,6 +108,7 @@ app.use(
     ...proxyOptions,
 
     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+      proxyReqOpts.headers["x-request-id"] = srcReq.headers["x-request-id"];
       proxyReqOpts.headers["Content-Type"] = "application/json";
       proxyReqOpts.headers["authorization"] = srcReq.headers["authorization"]; 
       proxyReqOpts.headers["x-user-id"] = srcReq.user.userId;
@@ -127,6 +132,7 @@ app.use(
   proxy(process.env.MEDIA_SERVICE_URL, {
     ...proxyOptions,
     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+      proxyReqOpts.headers["x-request-id"] = srcReq.headers["x-request-id"];
       proxyReqOpts.headers["x-user-id"] = srcReq.user.userId;
       if (!srcReq.headers["content-type"]?.startsWith("multipart/form-data")) {
         proxyReqOpts.headers["Content-Type"] = "application/json";
@@ -152,6 +158,7 @@ app.use(
   proxy(process.env.SEARCH_SERVICE_URL, {
     ...proxyOptions,
     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+      proxyReqOpts.headers["x-request-id"] = srcReq.headers["x-request-id"];
       proxyReqOpts.headers["Content-Type"] = "application/json";
       proxyReqOpts.headers["x-user-id"] = srcReq.user.userId;
 
@@ -174,6 +181,7 @@ app.use(
   proxy(process.env.NOTIFICATION_SERVICE_URL, {
     ...proxyOptions,
     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+      proxyReqOpts.headers["x-request-id"] = srcReq.headers["x-request-id"];
       proxyReqOpts.headers["Content-Type"] = "application/json";
       proxyReqOpts.headers["x-user-id"] = srcReq.user.userId;
 
@@ -196,6 +204,7 @@ app.use(
   proxy(process.env.CHAT_SERVICE_URL, {
     ...proxyOptions,
     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+      proxyReqOpts.headers["x-request-id"] = srcReq.headers["x-request-id"];
       proxyReqOpts.headers["Content-Type"] = "application/json";
       proxyReqOpts.headers["x-user-id"] = srcReq.user.userId;
 
@@ -211,9 +220,10 @@ app.use(
   })
 );
 
+app.get("/health", (req, res) => res.json({ status: "ok" }));
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+const serverInstance = app.listen(PORT, () => {
   logger.info(`API Gateway is running on port ${PORT}`);
   logger.info(
     `Identity service is running on port ${process.env.IDENTITY_SERVICE_URL}`
@@ -238,3 +248,18 @@ app.listen(PORT, () => {
   );
   logger.info(`Redis Url ${process.env.REDIS_URL}`);
 });
+const gracefulShutdown = async () => {
+  logger.info("Initiating graceful shutdown...");
+  try {
+    if (serverInstance) {
+      serverInstance.close(() => logger.info("HTTP server closed."));
+    }
+    
+    process.exit(0);
+  } catch (err) {
+    logger.error("Shutdown error", err);
+    process.exit(1);
+  }
+};
+process.on("SIGTERM", gracefulShutdown);
+process.on("SIGINT", gracefulShutdown);
