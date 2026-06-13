@@ -8,6 +8,7 @@ const { Server } = require("socket.io");
 const { initSocket } = require("./socketManager");
 
 const chatRoutes = require("./routes/chat-routes");
+const { register, metricsMiddleware } = require("@social-media/shared");
 const { errorHandler } = require("@social-media/shared");
 const { logger } = require("@social-media/shared");
 const { correlationMiddleware } = require("@social-media/shared");
@@ -30,6 +31,7 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(correlationMiddleware);
+app.use(metricsMiddleware("chat-service"));
 
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.url}`);

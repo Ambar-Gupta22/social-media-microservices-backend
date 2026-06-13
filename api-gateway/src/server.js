@@ -5,6 +5,7 @@ const Redis = require("ioredis");
 const helmet = require("helmet");
 const { rateLimit } = require("express-rate-limit");
 const { RedisStore } = require("rate-limit-redis");
+const { register, metricsMiddleware } = require("@social-media/shared");
 const { logger } = require("@social-media/shared");
 const { correlationMiddleware } = require("@social-media/shared");
 const proxy = require("express-http-proxy");
@@ -20,6 +21,7 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(correlationMiddleware);
+app.use(metricsMiddleware("api-gateway"));
 
 //rate limiting
 const ratelimitOptions = rateLimit({

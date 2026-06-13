@@ -1,6 +1,7 @@
 const amqp = require("amqplib");
 const logger = require("./logger");
 const { getCorrelationId } = require("./correlation");
+const { rabbitmqEventsPublishedTotal, rabbitmqEventsConsumedTotal } = require("./metrics");
 
 let serviceName = "unknown-service";
 try {
@@ -61,6 +62,7 @@ async function publishEvent(routingKey, message) {
     Buffer.from(JSON.stringify(message))
   );
   logger.info(`Event published: ${routingKey}`);
+  rabbitmqEventsPublishedTotal.inc({ routing_key: routingKey, service: serviceName });
 }
 
 async function consumeEvent(routingKey, callback) {
@@ -77,6 +79,7 @@ async function consumeEvent(routingKey, callback) {
       const content = JSON.parse(msg.content.toString());
       callback(content);
       channel.ack(msg);
+      rabbitmqEventsConsumedTotal.inc({ routing_key: routingKey, service: serviceName });
     }
   });
 

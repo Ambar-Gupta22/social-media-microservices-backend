@@ -5,6 +5,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const { ipKeyGenerator } = rateLimit;
+const { register, metricsMiddleware } = require("@social-media/shared");
 const { connectToRabbitMQ } = require("@social-media/shared");
 
 const commentRoutes = require("./routes/comment-routes");
@@ -26,6 +27,7 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(correlationMiddleware);
+app.use(metricsMiddleware("comment-service"));
 
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.url}`);
