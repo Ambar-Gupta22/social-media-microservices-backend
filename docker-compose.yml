@@ -36,7 +36,9 @@ services:
       retries: 5
 
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: .
+      dockerfile: ./api-gateway/Dockerfile
     ports:
       - "3000:3000"
     env_file: ./api-gateway/.env
@@ -55,7 +57,9 @@ services:
       retries: 5
 
   identity-service:
-    build: ./identity-service
+    build:
+      context: .
+      dockerfile: ./identity-service/Dockerfile
     env_file: ./identity-service/.env
     depends_on:
       mongodb:
@@ -75,7 +79,9 @@ services:
       retries: 5
 
   post-service:
-    build: ./post-service
+    build:
+      context: .
+      dockerfile: ./post-service/Dockerfile
     env_file: ./post-service/.env
     depends_on:
       mongodb:
@@ -95,7 +101,9 @@ services:
       retries: 5
 
   comment-service:
-    build: ./comment-service
+    build:
+      context: .
+      dockerfile: ./comment-service/Dockerfile
     env_file: ./comment-service/.env
     depends_on:
       mongodb:
@@ -112,7 +120,9 @@ services:
       retries: 5
 
   media-service:
-    build: ./media-service
+    build:
+      context: .
+      dockerfile: ./media-service/Dockerfile
     env_file: ./media-service/.env
     depends_on:
       mongodb:
@@ -132,7 +142,9 @@ services:
       retries: 5
 
   search-service:
-    build: ./search-service
+    build:
+      context: .
+      dockerfile: ./search-service/Dockerfile
     env_file: ./search-service/.env
     depends_on:
       mongodb:
@@ -152,7 +164,9 @@ services:
       retries: 5
 
   notification-service:
-    build: ./notification-service
+    build:
+      context: .
+      dockerfile: ./notification-service/Dockerfile
     env_file: ./notification-service/.env
     depends_on:
       mongodb:
@@ -169,7 +183,9 @@ services:
       retries: 5
 
   chat-service:
-    build: ./chat-service
+    build:
+      context: .
+      dockerfile: ./chat-service/Dockerfile
     env_file: ./chat-service/.env
     ports:
       - "4000:4000"
