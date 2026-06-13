@@ -19,7 +19,6 @@ const redisClient = new Redis(process.env.REDIS_URL);
 
 app.use(helmet());
 app.use(cors());
-app.use(express.json());
 app.use(correlationMiddleware);
 app.use(metricsMiddleware("api-gateway"));
 
@@ -51,6 +50,9 @@ const proxyOptions = {
   },
   proxyErrorHandler: (err, res, next) => {
     logger.error(`Proxy error: ${err.message}`);
+    if (res.headersSent) {
+      return next(err);
+    }
     res.status(500).json({
       message: `Internal server error`,
       error: err.message,
@@ -75,6 +77,7 @@ app.use(
 
       return proxyResData;
     },
+    parseReqBody: false,
   })
 );
 
@@ -100,6 +103,7 @@ app.use(
       );
       return proxyResData;
     },
+    parseReqBody: false,
   })
 );
 
@@ -124,6 +128,7 @@ app.use(
       );
       return proxyResData;
     },
+    parseReqBody: false,
   })
 );
 
@@ -173,6 +178,7 @@ app.use(
 
       return proxyResData;
     },
+    parseReqBody: false,
   })
 );
 
@@ -196,6 +202,7 @@ app.use(
 
       return proxyResData;
     },
+    parseReqBody: false,
   })
 );
 
@@ -219,6 +226,7 @@ app.use(
 
       return proxyResData;
     },
+    parseReqBody: false,
   })
 );
 
