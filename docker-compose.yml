@@ -1,6 +1,7 @@
 services:
   mongodb:
     image: mongo:latest
+    init: true
     ports:
       - "27017:27017"
     volumes:
@@ -28,6 +29,8 @@ services:
       - "5672:5672"
       - "15672:15672"
       - "15692:15692"
+    environment:
+      - RABBITMQ_ERLANG_COOKIE=socialmedia_secret_cookie
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
       interval: 10s
