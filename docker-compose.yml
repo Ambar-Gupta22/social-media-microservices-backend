@@ -1,6 +1,7 @@
 services:
   mongodb:
     image: mongo:latest
+    init: true
     ports:
       - "27017:27017"
     volumes:
@@ -22,21 +23,23 @@ services:
       retries: 5
 
   rabbitmq:
-    image: rabbitmq:3-management
+    build:
+      context: ./monitoring/rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
       - "15692:15692"
-    volumes:
-      - ./monitoring/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+    environment:
+      - RABBITMQ_ERLANG_COOKIE=socialmedia_secret_cookie
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
       interval: 10s
       timeout: 10s
       retries: 5
-
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: .
+      dockerfile: ./api-gateway/Dockerfile
     ports:
       - "3000:3000"
     env_file: ./api-gateway/.env
@@ -48,6 +51,13 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_URL=amqp://rabbitmq:5672
+      - IDENTITY_SERVICE_URL=http://identity-service:3001
+      - POST_SERVICE_URL=http://post-service:3002
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3003
+      - MEDIA_SERVICE_URL=http://media-service:3004
+      - SEARCH_SERVICE_URL=http://search-service:3005
+      - COMMENT_SERVICE_URL=http://comment-service:3006
+      - CHAT_SERVICE_URL=http://chat-service:3007
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
       interval: 10s
@@ -55,7 +65,9 @@ services:
       retries: 5
 
   identity-service:
-    build: ./identity-service
+    build:
+      context: .
+      dockerfile: ./identity-service/Dockerfile
     env_file: ./identity-service/.env
     depends_on:
       mongodb:
@@ -75,7 +87,9 @@ services:
       retries: 5
 
   post-service:
-    build: ./post-service
+    build:
+      context: .
+      dockerfile: ./post-service/Dockerfile
     env_file: ./post-service/.env
     depends_on:
       mongodb:
@@ -95,7 +109,9 @@ services:
       retries: 5
 
   comment-service:
-    build: ./comment-service
+    build:
+      context: .
+      dockerfile: ./comment-service/Dockerfile
     env_file: ./comment-service/.env
     depends_on:
       mongodb:
@@ -112,7 +128,9 @@ services:
       retries: 5
 
   media-service:
-    build: ./media-service
+    build:
+      context: .
+      dockerfile: ./media-service/Dockerfile
     env_file: ./media-service/.env
     depends_on:
       mongodb:
@@ -132,7 +150,9 @@ services:
       retries: 5
 
   search-service:
-    build: ./search-service
+    build:
+      context: .
+      dockerfile: ./search-service/Dockerfile
     env_file: ./search-service/.env
     depends_on:
       mongodb:
@@ -152,7 +172,9 @@ services:
       retries: 5
 
   notification-service:
-    build: ./notification-service
+    build:
+      context: .
+      dockerfile: ./notification-service/Dockerfile
     env_file: ./notification-service/.env
     depends_on:
       mongodb:
@@ -169,7 +191,9 @@ services:
       retries: 5
 
   chat-service:
-    build: ./chat-service
+    build:
+      context: .
+      dockerfile: ./chat-service/Dockerfile
     env_file: ./chat-service/.env
     ports:
       - "4000:4000"
