@@ -30,6 +30,7 @@ out/
 *.sw?
 
 # AI Tooling & Migration Scripts
+.claude/
 .agents/
 .agent/
 .planning/
