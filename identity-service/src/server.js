@@ -1,5 +1,6 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
+const { register, metricsMiddleware } = require("@social-media/shared");
 const { logger } = require("@social-media/shared");
 const { correlationMiddleware } = require("@social-media/shared");
 const express = require("express");
@@ -28,6 +29,7 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(correlationMiddleware);
+app.use(metricsMiddleware("identity-service"));
 
 app.use((req, res, next) => {
   logger.info(`Received ${req.method} request to ${req.url}`);

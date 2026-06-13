@@ -1,0 +1,40 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:3000']
+
+  - job_name: 'identity-service'
+    static_configs:
+      - targets: ['identity-service:3001']
+
+  - job_name: 'post-service'
+    static_configs:
+      - targets: ['post-service:3002']
+
+  - job_name: 'comment-service'
+    static_configs:
+      - targets: ['comment-service:3003']
+
+  - job_name: 'media-service'
+    static_configs:
+      - targets: ['media-service:3004']
+
+  - job_name: 'search-service'
+    static_configs:
+      - targets: ['search-service:3005']
+
+  - job_name: 'notification-service'
+    static_configs:
+      - targets: ['notification-service:3006']
+
+  - job_name: 'chat-service'
+    static_configs:
+      - targets: ['chat-service:3007']
+
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq:15692']

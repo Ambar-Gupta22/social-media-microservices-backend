@@ -9,6 +9,7 @@ const { RedisStore } = require("rate-limit-redis");
 const { ipKeyGenerator } = rateLimit;
 
 const postRoutes = require("./routes/post-routes");
+const { register, metricsMiddleware } = require("@social-media/shared");
 const { errorHandler } = require("@social-media/shared");
 const { logger } = require("@social-media/shared");
 const { correlationMiddleware } = require("@social-media/shared");
@@ -31,6 +32,7 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(correlationMiddleware);
+app.use(metricsMiddleware("post-service"));
 
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.url}`);
