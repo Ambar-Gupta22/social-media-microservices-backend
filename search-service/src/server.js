@@ -6,6 +6,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const errorHandler = require("./middleware/errorHandler");
 const logger = require("./utils/logger");
+const { correlationMiddleware } = require("./utils/correlation");
 const { connectToRabbitMQ, consumeEvent } = require("./utils/rabbitmq");
 const searchRoutes = require("./routes/search-routes");
 const rateLimit = require("express-rate-limit");
@@ -30,6 +31,7 @@ const redisClient = new Redis(process.env.REDIS_URL);
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(correlationMiddleware);
 
 app.use((req, res, next) => {
   logger.info(`Received ${req.method} request to ${req.url}`);
@@ -66,6 +68,7 @@ app.use("/api/search/posts", createSearchLimiter);
 
 app.use("/api/search", searchRoutes);
 
+app.get("/health", (req, res) => res.json({ status: "ok" }));
 app.use(errorHandler);
 
 async function startServer() {
@@ -76,7 +79,7 @@ async function startServer() {
     await consumeEvent("post.created", handlePostCreated);
     await consumeEvent("post.deleted", handlePostDeleted);
 
-    app.listen(PORT, () => {
+    const serverInstance = app.listen(PORT, () => {
       logger.info(`Search service is running on port: ${PORT}`);
     });
   } catch (e) {
@@ -86,3 +89,19 @@ async function startServer() {
 }
 
 startServer();
+const gracefulShutdown = async () => {
+  logger.info("Initiating graceful shutdown...");
+  try {
+    if (serverInstance) {
+      serverInstance.close(() => logger.info("HTTP server closed."));
+    }
+    if (mongoose.connection.readyState === 1) await mongoose.connection.close();
+    logger.info("MongoDB connection closed.");
+    process.exit(0);
+  } catch (err) {
+    logger.error("Shutdown error", err);
+    process.exit(1);
+  }
+};
+process.on("SIGTERM", gracefulShutdown);
+process.on("SIGINT", gracefulShutdown);

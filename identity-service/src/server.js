@@ -1,6 +1,7 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 const logger = require("./utils/logger");
+const { correlationMiddleware } = require("./utils/correlation");
 const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
@@ -26,6 +27,7 @@ const redisClient = new Redis(process.env.REDIS_URL);
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(correlationMiddleware);
 
 app.use((req, res, next) => {
   logger.info(`Received ${req.method} request to ${req.url}`);
@@ -72,9 +74,10 @@ app.use("/api/auth/register", sensitiveEndpointsLimiter);
 app.use("/api/auth", routes);
 
 //error handler
+app.get("/health", (req, res) => res.json({ status: "ok" }));
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+const serverInstance = app.listen(PORT, () => {
   logger.info(`Identity service running on port ${PORT}`);
 });
 
@@ -83,3 +86,19 @@ app.listen(PORT, () => {
 process.on("unhandledRejection", (reason, promise) => {
   logger.error("Unhandled Rejection at", promise, "reason:", reason);
 });
+const gracefulShutdown = async () => {
+  logger.info("Initiating graceful shutdown...");
+  try {
+    if (serverInstance) {
+      serverInstance.close(() => logger.info("HTTP server closed."));
+    }
+    if (mongoose.connection.readyState === 1) await mongoose.connection.close();
+    logger.info("MongoDB connection closed.");
+    process.exit(0);
+  } catch (err) {
+    logger.error("Shutdown error", err);
+    process.exit(1);
+  }
+};
+process.on("SIGTERM", gracefulShutdown);
+process.on("SIGINT", gracefulShutdown);

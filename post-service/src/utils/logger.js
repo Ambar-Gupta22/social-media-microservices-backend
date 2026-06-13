@@ -1,9 +1,20 @@
 const winston = require("winston");
+const { getCorrelationId } = require("./correlation");
+
+const correlationFormat = winston.format((info) => {
+  const correlationId = getCorrelationId();
+  if (correlationId) {
+    info.correlationId = correlationId;
+  }
+  return info;
+});
+
 
 const logger = winston.createLogger({
   level: process.env.NODE_ENV === "production" ? "info" : "debug",
   format: winston.format.combine(
     winston.format.timestamp(),
+    correlationFormat(),
     winston.format.errors({ stack: true }),
     winston.format.splat(),
     winston.format.json()

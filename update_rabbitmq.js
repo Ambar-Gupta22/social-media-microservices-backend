@@ -1,4 +1,18 @@
-const amqp = require("amqplib");
+const fs = require('fs');
+const path = require('path');
+
+const services = [
+  'post-service', 'comment-service', 'media-service', 
+  'search-service', 'notification-service', 'chat-service'
+];
+
+services.forEach(service => {
+  const rabbitPath = path.join(__dirname, service, 'src', 'utils', 'rabbitmq.js');
+  if (!fs.existsSync(rabbitPath)) return;
+
+  let isMediaService = service === 'media-service';
+
+  const newContent = `const amqp = require("amqplib");
 const logger = require("./logger");
 const serviceName = require("../../package.json").name;
 
@@ -28,7 +42,7 @@ async function connectToRabbitMQ(retries = 5) {
       return channel;
     } catch (e) {
       retries -= 1;
-      logger.error(`Error connecting to RabbitMQ. Retries left: ${retries}`, e);
+      logger.error(\`Error connecting to RabbitMQ. Retries left: \${retries}\`, e);
       if (retries === 0) {
         logger.error("Could not connect to RabbitMQ. Exiting...");
         process.exit(1);
@@ -38,14 +52,25 @@ async function connectToRabbitMQ(retries = 5) {
   }
 }
 
+${isMediaService ? '' : `async function publishEvent(routingKey, message) {
+  if (!channel) {
+    await connectToRabbitMQ();
+  }
 
+  channel.publish(
+    EXCHANGE_NAME,
+    routingKey,
+    Buffer.from(JSON.stringify(message))
+  );
+  logger.info(\`Event published: \${routingKey}\`);
+}`}
 
 async function consumeEvent(routingKey, callback) {
   if (!channel) {
     await connectToRabbitMQ();
   }
 
-  const queueName = `${serviceName}.${routingKey}`;
+  const queueName = \`\${serviceName}.\${routingKey}\`;
   const q = await channel.assertQueue(queueName, { exclusive: false, durable: true });
   await channel.bindQueue(q.queue, EXCHANGE_NAME, routingKey);
   
@@ -57,7 +82,12 @@ async function consumeEvent(routingKey, callback) {
     }
   });
 
-  logger.info(`Subscribed to event: ${routingKey} on durable queue: ${queueName}`);
+  logger.info(\`Subscribed to event: \${routingKey} on durable queue: \${queueName}\`);
 }
 
-module.exports = { connectToRabbitMQ, consumeEvent };
+module.exports = { connectToRabbitMQ, ${isMediaService ? 'consumeEvent' : 'publishEvent, consumeEvent'} };
+`;
+
+  fs.writeFileSync(rabbitPath, newContent, 'utf8');
+  console.log(`Updated rabbitmq for ${service}`);
+});

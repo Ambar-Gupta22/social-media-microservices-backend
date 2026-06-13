@@ -6,6 +6,7 @@ const helmet = require("helmet");
 const mediaRoutes = require("./routes/media-routes");
 const errorHandler = require("./middleware/errorHandler");
 const logger = require("./utils/logger");
+const { correlationMiddleware } = require("./utils/correlation");
 const rateLimit = require("express-rate-limit");
 const { ipKeyGenerator } = rateLimit;
 const { connectToRabbitMQ, consumeEvent } = require("./utils/rabbitmq");
@@ -23,6 +24,7 @@ mongoose
 app.use(cors());
 app.use(helmet());
 app.use(express.json());
+app.use(correlationMiddleware);
 
 app.use((req, res, next) => {
   logger.info(`Received ${req.method} request to ${req.url}`);
@@ -59,6 +61,7 @@ app.use("/api/media/upload", createMediaLimiter);
 
 app.use("/api/media", mediaRoutes);
 
+app.get("/health", (req, res) => res.json({ status: "ok" }));
 app.use(errorHandler);
 
 async function startServer() {
@@ -68,7 +71,7 @@ async function startServer() {
     //consume all the events
     await consumeEvent("post.deleted", handlePostDeleted);
 
-    app.listen(PORT, () => {
+    const serverInstance = app.listen(PORT, () => {
       logger.info(`Media service running on port ${PORT}`);
     });
   } catch (error) {
@@ -84,3 +87,19 @@ startServer();
 process.on("unhandledRejection", (reason, promise) => {
   logger.error("Unhandled Rejection at", promise, "reason:", reason);
 });
+const gracefulShutdown = async () => {
+  logger.info("Initiating graceful shutdown...");
+  try {
+    if (serverInstance) {
+      serverInstance.close(() => logger.info("HTTP server closed."));
+    }
+    if (mongoose.connection.readyState === 1) await mongoose.connection.close();
+    logger.info("MongoDB connection closed.");
+    process.exit(0);
+  } catch (err) {
+    logger.error("Shutdown error", err);
+    process.exit(1);
+  }
+};
+process.on("SIGTERM", gracefulShutdown);
+process.on("SIGINT", gracefulShutdown);

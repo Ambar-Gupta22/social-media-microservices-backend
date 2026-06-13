@@ -10,6 +10,7 @@ const { connectToRabbitMQ } = require("./utils/rabbitmq");
 const commentRoutes = require("./routes/comment-routes");
 const errorHandler = require("./middleware/errorHandler");
 const logger = require("./utils/logger");
+const { correlationMiddleware } = require("./utils/correlation");
 
 const app = express();
 const PORT = process.env.PORT || 3003;
@@ -24,6 +25,7 @@ mongoose
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(correlationMiddleware);
 
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.url}`);
@@ -62,12 +64,13 @@ app.use("/api/comments/create-comment", createCommentLimiter);
 app.use("/api/comments", commentRoutes);
 
 // Error handler
+app.get("/health", (req, res) => res.json({ status: "ok" }));
 app.use(errorHandler);
 
 async function startServer() {
   try {
     await connectToRabbitMQ();
-    app.listen(PORT, () => {
+    const serverInstance = app.listen(PORT, () => {
       logger.info(`Comment service running on port ${PORT}`);
     });
   } catch (error) {
@@ -82,3 +85,19 @@ startServer();
 process.on("unhandledRejection", (reason) => {
   logger.error("Unhandled Rejection:", reason);
 });
+const gracefulShutdown = async () => {
+  logger.info("Initiating graceful shutdown...");
+  try {
+    if (serverInstance) {
+      serverInstance.close(() => logger.info("HTTP server closed."));
+    }
+    if (mongoose.connection.readyState === 1) await mongoose.connection.close();
+    logger.info("MongoDB connection closed.");
+    process.exit(0);
+  } catch (err) {
+    logger.error("Shutdown error", err);
+    process.exit(1);
+  }
+};
+process.on("SIGTERM", gracefulShutdown);
+process.on("SIGINT", gracefulShutdown);

@@ -3,7 +3,8 @@ const Conversation = require("../models/Conversation");
 const { publishEvent } = require("../utils/rabbitmq");
 const { validateSendMessage } = require("../utils/validation");
 const logger = require("../utils/logger");
-const { io, onlineUsers } = require("../server");
+const { getIo, onlineUsers } = require("../socketManager");
+const mongoose = require("mongoose");
 
 /**
  * Create or get existing conversation
@@ -144,8 +145,8 @@ const sendMessage = async (req, res) => {
       receiverId,
     });
 
-    // Emit event for notifications (non-blocking)
-    publishEvent("message.sent", {
+    // Emit event for notifications (blocking to ensure delivery before sending to socket)
+    await publishEvent("message.sent", {
       type: "MESSAGE_RECEIVED",
       receiverId,
       actorId: senderId,
@@ -160,7 +161,7 @@ const sendMessage = async (req, res) => {
 
     if (receiverSockets) {
       receiverSockets.forEach(socketId => {
-        io.to(socketId).emit("newMessage", {
+        getIo().to(socketId).emit("newMessage", {
           _id: message._id,
           conversationId,
           senderId,
@@ -271,46 +272,74 @@ const getUserConversations = async (req, res) => {
 
     logger.info("Fetching user conversations", { userId });
 
-    // Find all conversations where user is participant
-    const conversations = await Conversation.find({
-      participants: userId,
-    }).lean();
-
-    const response = [];
-
-    for (const convo of conversations) {
-      // Find the other user (1–1 chat assumption)
-      const otherUserId = convo.participants.find(
-        (id) => id.toString() !== userId
-      );
-
-      // Get last message
-      const lastMessage = await Message.findOne({
-        conversationId: convo._id,
-      })
-        .sort({ createdAt: -1 })
-        .lean();
-
-      // Count unread messages for current user
-      const unreadCount = await Message.countDocuments({
-        conversationId: convo._id,
-        receiverId: userId,
-        isRead: false,
-      });
-
-      response.push({
-        conversationId: convo._id,
-        otherUserId,
-        lastMessage: lastMessage?.content || null,
-        lastMessageTime: lastMessage?.createdAt || null,
-        unreadCount,
-      });
-    }
-
-    // Sort conversations by last message time (latest first)
-    response.sort((a, b) => {
-      return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
-    });
+    const response = await Conversation.aggregate([
+      // 1. Match conversations where the user is a participant
+      {
+        $match: {
+          participants: new mongoose.Types.ObjectId(userId)
+        }
+      },
+      // 2. Lookup the last message for this conversation
+      {
+        $lookup: {
+          from: "messages",
+          let: { convoId: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$conversationId", "$$convoId"] } } },
+            { $sort: { createdAt: -1 } },
+            { $limit: 1 }
+          ],
+          as: "lastMessageData"
+        }
+      },
+      // 3. Lookup unread messages count for this user
+      {
+        $lookup: {
+          from: "messages",
+          let: { convoId: "$_id" },
+          pipeline: [
+            { 
+              $match: { 
+                $expr: { 
+                  $and: [
+                    { $eq: ["$conversationId", "$$convoId"] },
+                    { $eq: ["$receiverId", new mongoose.Types.ObjectId(userId)] },
+                    { $eq: ["$isRead", false] }
+                  ]
+                }
+              } 
+            },
+            { $count: "unreadCount" }
+          ],
+          as: "unreadData"
+        }
+      },
+      // 4. Project the final structure
+      {
+        $project: {
+          conversationId: "$_id",
+          otherUserId: {
+            $arrayElemAt: [
+              {
+                $filter: {
+                  input: "$participants",
+                  as: "participant",
+                  cond: { $ne: ["$$participant", new mongoose.Types.ObjectId(userId)] }
+                }
+              },
+              0
+            ]
+          },
+          lastMessage: { $arrayElemAt: ["$lastMessageData.content", 0] },
+          lastMessageTime: { $arrayElemAt: ["$lastMessageData.createdAt", 0] },
+          unreadCount: { 
+            $ifNull: [{ $arrayElemAt: ["$unreadData.unreadCount", 0] }, 0] 
+          }
+        }
+      },
+      // 5. Sort by last message time
+      { $sort: { lastMessageTime: -1 } }
+    ]);
 
     res.json({
       success: true,
@@ -371,7 +400,7 @@ const markMessagesAsRead = async (req, res) => {
 
       if (senderSockets) {
         senderSockets.forEach((socketId) => {
-          io.to(socketId).emit("messagesRead", {
+          getIo().to(socketId).emit("messagesRead", {
             conversationId,
             readerId: userId,
           });
