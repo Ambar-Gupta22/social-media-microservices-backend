@@ -8,10 +8,10 @@ const { Server } = require("socket.io");
 const { initSocket } = require("./socketManager");
 
 const chatRoutes = require("./routes/chat-routes");
-const errorHandler = require("./middleware/errorHandler");
-const logger = require("./utils/logger");
-const { correlationMiddleware } = require("./utils/correlation");
-const { connectToRabbitMQ } = require("./utils/rabbitmq");
+const { errorHandler } = require("@social-media/shared");
+const { logger } = require("@social-media/shared");
+const { correlationMiddleware } = require("@social-media/shared");
+const { connectToRabbitMQ } = require("@social-media/shared");
 
 const app = express();
 const server = http.createServer(app); // Create HTTP server for Socket.io

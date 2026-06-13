@@ -1,12 +1,10 @@
 const Media = require("../models/Media");
 const { uploadMediaToCloudinary } = require("../utils/cloudinary");
-const logger = require("../utils/logger");
+const { logger } = require("@social-media/shared");
 
 const uploadMedia = async (req, res) => {
   logger.info("Starting media upload");
   try {
-    console.log(req.file, "req.filereq.file");
-
     if (!req.file) {
       logger.error("No file found. Please add a file and try again!");
       return res.status(400).json({

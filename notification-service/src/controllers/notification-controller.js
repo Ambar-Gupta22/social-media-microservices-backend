@@ -1,5 +1,5 @@
 const Notification = require("../models/Notification");
-const logger = require("../utils/logger");
+const { logger } = require("@social-media/shared");
 
 /**
  * GET /notifications

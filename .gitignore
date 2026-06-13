@@ -1,3 +1,39 @@
-node_modules
+# Dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment
 .env
+.env.*.local
+
+# Logs
+logs/
 *.log
+
+# Coverage directory
+coverage/
+
+# Output directories
+dist/
+build/
+out/
+
+# IDE & OS Files
+.DS_Store
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# AI Tooling & Migration Scripts
+.agents/
+.agent/
+.planning/
+add_health.js
+setup_correlation.js
+update_rabbitmq.js
+migrate_shared.js

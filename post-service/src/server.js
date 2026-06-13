@@ -9,10 +9,10 @@ const { RedisStore } = require("rate-limit-redis");
 const { ipKeyGenerator } = rateLimit;
 
 const postRoutes = require("./routes/post-routes");
-const errorHandler = require("./middleware/errorHandler");
-const logger = require("./utils/logger");
-const { correlationMiddleware } = require("./utils/correlation");
-const { connectToRabbitMQ } = require("./utils/rabbitmq");
+const { errorHandler } = require("@social-media/shared");
+const { logger } = require("@social-media/shared");
+const { correlationMiddleware } = require("@social-media/shared");
+const { connectToRabbitMQ } = require("@social-media/shared");
 
 const app = express();
 const PORT = process.env.PORT || 3002;

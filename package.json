@@ -1,0 +1,21 @@
+{
+  "name": "social-media-microservices",
+  "version": "1.0.0",
+  "description": "Distributed social media backend system designed using microservices architecture. Features event-driven communication via RabbitMQ, real-time bidirectional messaging using WebSockets, Docker-based container orchestration, and environment-based configuration management. Focused on scalability, modularity, and production-grade backend design.",
+  "main": "add_health.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ambar-Gupta22/social-media-microservices-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "workspaces": [
+    "packages/*",
+    "*-service",
+    "api-gateway"
+  ]
+}

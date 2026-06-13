@@ -1,7 +1,7 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
-const logger = require("./utils/logger");
-const { correlationMiddleware } = require("./utils/correlation");
+const { logger } = require("@social-media/shared");
+const { correlationMiddleware } = require("@social-media/shared");
 const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
@@ -10,7 +10,7 @@ const Redis = require("ioredis");
 const { rateLimit } = require("express-rate-limit");
 const { RedisStore } = require("rate-limit-redis");
 const routes = require("./routes/identity-service");
-const errorHandler = require("./middleware/errorHandler");
+const { errorHandler } = require("@social-media/shared");
 
 const app = express();
 const PORT = process.env.PORT || 3001;

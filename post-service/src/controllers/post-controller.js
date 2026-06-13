@@ -1,6 +1,6 @@
 const Post = require("../models/Post");
-const logger = require("../utils/logger");
-const { publishEvent } = require("../utils/rabbitmq");
+const { logger } = require("@social-media/shared");
+const { publishEvent } = require("@social-media/shared");
 const { validateCreatePost } = require("../utils/validation");
 
 async function getPostsCacheVersion(redis) {

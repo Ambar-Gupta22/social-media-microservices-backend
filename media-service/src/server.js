@@ -4,12 +4,12 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
 const mediaRoutes = require("./routes/media-routes");
-const errorHandler = require("./middleware/errorHandler");
-const logger = require("./utils/logger");
-const { correlationMiddleware } = require("./utils/correlation");
+const { errorHandler } = require("@social-media/shared");
+const { logger } = require("@social-media/shared");
+const { correlationMiddleware } = require("@social-media/shared");
 const rateLimit = require("express-rate-limit");
 const { ipKeyGenerator } = rateLimit;
-const { connectToRabbitMQ, consumeEvent } = require("./utils/rabbitmq");
+const { connectToRabbitMQ, consumeEvent } = require("@social-media/shared");
 const { handlePostDeleted } = require("./eventHandlers/media-event-handlers");
 
 const app = express();

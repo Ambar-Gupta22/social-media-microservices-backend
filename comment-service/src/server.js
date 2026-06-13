@@ -5,12 +5,12 @@ const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const { ipKeyGenerator } = rateLimit;
-const { connectToRabbitMQ } = require("./utils/rabbitmq");
+const { connectToRabbitMQ } = require("@social-media/shared");
 
 const commentRoutes = require("./routes/comment-routes");
-const errorHandler = require("./middleware/errorHandler");
-const logger = require("./utils/logger");
-const { correlationMiddleware } = require("./utils/correlation");
+const { errorHandler } = require("@social-media/shared");
+const { logger } = require("@social-media/shared");
+const { correlationMiddleware } = require("@social-media/shared");
 
 const app = express();
 const PORT = process.env.PORT || 3003;

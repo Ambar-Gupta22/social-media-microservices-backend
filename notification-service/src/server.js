@@ -4,10 +4,10 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
 const notificationRoutes = require("./routes/notification-routes");
-const errorHandler = require("./middleware/errorHandler");
-const logger = require("./utils/logger");
-const { correlationMiddleware } = require("./utils/correlation");
-const { connectToRabbitMQ, consumeEvent } = require("./utils/rabbitmq");
+const { errorHandler } = require("@social-media/shared");
+const { logger } = require("@social-media/shared");
+const { correlationMiddleware } = require("@social-media/shared");
+const { connectToRabbitMQ, consumeEvent } = require("@social-media/shared");
 const { handlePostLiked, handlePostCommented, handleMessageReceived} = require("./eventHandlers/notification-event-handlers");
 
 const app = express();

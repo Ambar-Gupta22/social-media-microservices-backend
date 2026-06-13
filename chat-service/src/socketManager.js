@@ -1,6 +1,6 @@
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
-const logger = require("./utils/logger");
+const { logger } = require("@social-media/shared");
 
 const onlineUsers = new Map();
 let io;
