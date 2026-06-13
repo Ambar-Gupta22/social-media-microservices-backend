@@ -35,7 +35,7 @@ async function connectToRabbitMQ(retries = 5) {
       return channel;
     } catch (e) {
       retries -= 1;
-      logger.error(\`Error connecting to RabbitMQ. Retries left: \${retries}\`, e);
+      logger.error(`Error connecting to RabbitMQ. Retries left: ${retries}`, e);
       if (retries === 0) {
         logger.error("Could not connect to RabbitMQ. Exiting...");
         process.exit(1);
@@ -60,7 +60,7 @@ async function publishEvent(routingKey, message) {
     routingKey,
     Buffer.from(JSON.stringify(message))
   );
-  logger.info(\`Event published: \${routingKey}\`);
+  logger.info(`Event published: ${routingKey}`);
 }
 
 async function consumeEvent(routingKey, callback) {
@@ -68,7 +68,7 @@ async function consumeEvent(routingKey, callback) {
     await connectToRabbitMQ();
   }
 
-  const queueName = \`\${serviceName}.\${routingKey}\`;
+  const queueName = `${serviceName}.${routingKey}`;
   const q = await channel.assertQueue(queueName, { exclusive: false, durable: true });
   await channel.bindQueue(q.queue, EXCHANGE_NAME, routingKey);
   
@@ -80,7 +80,7 @@ async function consumeEvent(routingKey, callback) {
     }
   });
 
-  logger.info(\`Subscribed to event: \${routingKey} on durable queue: \${queueName}\`);
+  logger.info(`Subscribed to event: ${routingKey} on durable queue: ${queueName}`);
 }
 
 module.exports = { connectToRabbitMQ, publishEvent, consumeEvent };
