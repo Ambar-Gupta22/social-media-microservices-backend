@@ -4,10 +4,10 @@ const mongoose = require("mongoose");
 const Redis = require("ioredis");
 const cors = require("cors");
 const helmet = require("helmet");
-const errorHandler = require("./middleware/errorHandler");
-const logger = require("./utils/logger");
-const { correlationMiddleware } = require("./utils/correlation");
-const { connectToRabbitMQ, consumeEvent } = require("./utils/rabbitmq");
+const { errorHandler } = require("@social-media/shared");
+const { logger } = require("@social-media/shared");
+const { correlationMiddleware } = require("@social-media/shared");
+const { connectToRabbitMQ, consumeEvent } = require("@social-media/shared");
 const searchRoutes = require("./routes/search-routes");
 const rateLimit = require("express-rate-limit");
 const { ipKeyGenerator } = rateLimit;
@@ -58,7 +58,7 @@ const createSearchLimiter = rateLimit({
     );
     res.status(429).json({
       success: false,
-      message: "Too many posts, please try again later",
+      message: "Too many searches, please try again later",
     });
   },
 });

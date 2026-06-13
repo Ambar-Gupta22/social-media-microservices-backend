@@ -1,0 +1,11 @@
+{
+  "name": "@social-media/shared",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "dependencies": {
+    "amqplib": "^0.10.9",
+    "jsonwebtoken": "^9.0.3",
+    "uuid": "^11.0.3",
+    "winston": "^3.19.0"
+  }
+}

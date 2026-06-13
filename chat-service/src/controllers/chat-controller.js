@@ -1,8 +1,8 @@
 const Message = require("../models/Message");
 const Conversation = require("../models/Conversation");
-const { publishEvent } = require("../utils/rabbitmq");
+const { publishEvent } = require("@social-media/shared");
 const { validateSendMessage } = require("../utils/validation");
-const logger = require("../utils/logger");
+const { logger } = require("@social-media/shared");
 const { getIo, onlineUsers } = require("../socketManager");
 const mongoose = require("mongoose");
 

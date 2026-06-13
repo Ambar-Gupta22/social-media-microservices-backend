@@ -5,11 +5,11 @@ const Redis = require("ioredis");
 const helmet = require("helmet");
 const { rateLimit } = require("express-rate-limit");
 const { RedisStore } = require("rate-limit-redis");
-const logger = require("./utils/logger");
-const { correlationMiddleware } = require("./utils/correlation");
+const { logger } = require("@social-media/shared");
+const { correlationMiddleware } = require("@social-media/shared");
 const proxy = require("express-http-proxy");
-const errorHandler = require("./middleware/errorHandler");
-const { validateToken } = require("./middleware/authMiddleware");
+const { errorHandler } = require("@social-media/shared");
+const { validateToken } = require("@social-media/shared");
 
 const app = express();
 const PORT = process.env.PORT || 3000;

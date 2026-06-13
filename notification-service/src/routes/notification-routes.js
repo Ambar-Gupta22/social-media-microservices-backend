@@ -6,7 +6,7 @@ const {
   getUnreadCount,
 } = require("../controllers/notification-controller");
 
-const { authenticateRequest } = require("../middleware/authMiddleware");
+const { authenticateRequest } = require("@social-media/shared");
 const rateLimit = require("express-rate-limit");
 
 const router = express.Router();

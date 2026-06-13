@@ -1,5 +1,5 @@
 const Search = require("../models/Search");
-const logger = require("../utils/logger");
+const { logger } = require("@social-media/shared");
 
 async function handlePostCreated(event) {
   try {

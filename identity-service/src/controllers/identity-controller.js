@@ -1,11 +1,11 @@
 const RefreshToken = require("../models/RefreshToken");
 const User = require("../models/User");
 const generateTokens = require("../utils/generateToken");
-const logger = require("../utils/logger");
+const { logger } = require("@social-media/shared");
 const { validateRegistration, validatelogin } = require("../utils/validation");
 
 //user registration
-const resgiterUser = async (req, res) => {
+const registerUser = async (req, res) => {
   logger.info("Registration endpoint hit...");
   try {
     //validate the schema
@@ -30,7 +30,7 @@ const resgiterUser = async (req, res) => {
 
     user = new User({ username, email, password });
     await user.save();
-    logger.warn("User saved successfully", user._id);
+    logger.info("User saved successfully", user._id);
 
     const { accessToken, refreshToken } = await generateTokens(user);
 
@@ -200,4 +200,4 @@ const logoutUser = async (req, res) => {
   }
 };
 
-module.exports = { resgiterUser, loginUser, refreshTokenUser, logoutUser };
+module.exports = { registerUser, loginUser, refreshTokenUser, logoutUser };

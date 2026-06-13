@@ -1,7 +1,7 @@
 const Comment = require("../models/Comment");
-const logger = require("../utils/logger");
+const { logger } = require("@social-media/shared");
 const { validateCreateComment } = require("../utils/validation");
-const { publishEvent } = require("../utils/rabbitmq"); 
+const { publishEvent } = require("@social-media/shared"); 
 
 /**
  * CREATE COMMENT

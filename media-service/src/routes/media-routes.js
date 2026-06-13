@@ -5,8 +5,8 @@ const {
   uploadMedia,
   getAllMedias,
 } = require("../controllers/media-controller");
-const { authenticateRequest } = require("../middleware/authMiddleware");
-const logger = require("../utils/logger");
+const { authenticateRequest } = require("@social-media/shared");
+const { logger } = require("@social-media/shared");
 
 const router = express.Router();
 
